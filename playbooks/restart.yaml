@@ -1,0 +1,10 @@
+---
+- name: Restart all nodes
+  hosts: nodes
+  become: yes
+  tasks:
+    - name: Reboot the node
+      ansible.builtin.reboot:
+        msg: "Restarting system for maintenance"
+        reboot_timeout: 600
+

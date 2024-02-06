@@ -1,0 +1,7 @@
+# cp to /etc/rancher/k3s/registries.yaml on each of the nodes
+# also make sure the entry below is in /etc/hosts
+# <ip address> registry registry.cube.local
+mirrors:
+  docker-registry:
+    endpoint:
+      - "http://registry.cube.local:5000"
