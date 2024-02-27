@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syncthing-pvc
+  labels:
+    app: syncthing
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 15Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncthing-deployment
+  labels:
+    app: syncthing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: syncthing
+  template:
+    metadata:
+      labels:
+        app: syncthing
+    spec:
+      containers:
+      - name: syncthing
+        image: syncthing/syncthing:latest
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8384
+          name: syncthing
+          protocol: TCP
+        - containerPort: 22000
+          protocol: TCP
+          name: to-listen
+        - containerPort: 22000
+          protocol: UDP
+          name: to-discover
+        volumeMounts:
+        - name: syncthing-storage
+          mountPath: /var/syncthing
+      volumes:
+      - name: syncthing-storage
+        persistentVolumeClaim:
+          claimName: syncthing-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing-service
+  labels:
+    app: syncthing
+spec:
+  selector:
+    app: syncthing
+  ports:
+    - name: http
+      port: 32080
+      targetPort: 8384
+      protocol: TCP
+    - protocol: TCP
+      port: 32000
+      targetPort: 22000
+      name: to-listen
+    - protocol: UDP
+      port: 32000
+      targetPort: 22000
+      name: to-discover
+  type: NodePort
+  # type: LoadBalancer
+  # loadBalancerIP: 192.168.1.194
